@@ -57,6 +57,7 @@ public class RnBlePeripheralModule extends ReactContextBaseJavaModule {
     private BluetoothGattServer mGattServer;
     private BluetoothLeAdvertiser mAdvertiser;
     private Promise mAdvPromise;
+    private boolean mIsAdvertising;
 
     private static final UUID CHARACTERISTIC_USER_DESCRIPTION_UUID = UUID
             .fromString("00002901-0000-1000-8000-00805f9b34fb");
@@ -255,6 +256,11 @@ public class RnBlePeripheralModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void isAdvertising(Promise promise){
+        promise.resolve(mIsAdvertising);
+    }
+
+    @ReactMethod
     public void getState(Promise promise) {
         Log.i(TAG, "getstate");
         if (mBluetoothAdapter.isMultipleAdvertisementSupported()) {
@@ -361,6 +367,7 @@ public class RnBlePeripheralModule extends ReactContextBaseJavaModule {
             Log.i(TAG, "adv started");
             mAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
             mAdvertiser.startAdvertising(mAdvSettings, mAdvData, mAdvScanResponse, mAdvCallback);
+            mIsAdvertising=true;
         } else {
             promise.reject("invalid_advertisement");
             //not supported
@@ -406,6 +413,7 @@ public class RnBlePeripheralModule extends ReactContextBaseJavaModule {
             // If stopAdvertising() gets called before close() a null
             // pointer exception is raised.
             mAdvertiser.stopAdvertising(mAdvCallback);
+            mIsAdvertising=false;
         }
         promise.resolve(null);
     }
