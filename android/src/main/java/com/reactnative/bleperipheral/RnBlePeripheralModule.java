@@ -13,6 +13,7 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Base64;
@@ -444,6 +445,38 @@ public class RnBlePeripheralModule extends ReactContextBaseJavaModule {
             promise.resolve(null);
         } else {
             promise.reject("invalid_request");
+        }
+
+    }
+
+    @ReactMethod
+    public void notify(String characteristicUuid,String value,Promise promise){
+        BluetoothGattCharacteristic characteristic=null;
+        if (mGattServer.getServices()==null|| mGattServer.getServices().size()==0){
+            promise.reject("service_not_found");
+            return;
+        }
+        for (BluetoothGattService service : mGattServer.getServices()) {
+            for (BluetoothGattCharacteristic serviceCharacteristic : service.getCharacteristics()) {
+                if (serviceCharacteristic.getUuid().equals(UUID.fromString(characteristicUuid))){
+                    characteristic=serviceCharacteristic;
+                    break;
+                }
+            }
+        }
+        if (characteristic==null){
+            promise.reject("characteristic_not_found");
+            return;
+        }
+        byte[] valueArr = Base64.decode(value, Base64.DEFAULT);
+        boolean sent=characteristic.setValue(valueArr);
+        for (BluetoothDevice connectedDevice :  mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT)) {
+            mGattServer.notifyCharacteristicChanged(connectedDevice,characteristic,false);
+        }
+        if (sent){
+            promise.resolve(null);
+        }else {
+            promise.reject("The underlying transmit queue is full.");
         }
 
     }
