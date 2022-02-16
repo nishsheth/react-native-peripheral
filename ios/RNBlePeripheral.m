@@ -273,6 +273,10 @@ RCT_EXPORT_METHOD(notify: (CBUUID *)characteristicUuid
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didSubscribeToCharacteristic:(CBCharacteristic *)characteristic {
+    CBMutableCharacteristic *oldCharacteristic = characteristics[characteristic.UUID];
+    if (oldCharacteristic!=nil) {
+        [self->characteristics setObject:(CBMutableCharacteristic *)characteristic forKey:characteristic.UUID];
+    }
   [self sendEventWithName:SUBSCRIBED body:@{
     @"centralUuid": central.identifier,
     @"characteristicUuid": characteristic.UUID.UUIDString,
@@ -281,6 +285,10 @@ RCT_EXPORT_METHOD(notify: (CBUUID *)characteristicUuid
 }
 
 -(void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic {
+    CBMutableCharacteristic *oldCharacteristic = characteristics[characteristic.UUID];
+    if (oldCharacteristic!=nil) {
+        [self->characteristics setObject:(CBMutableCharacteristic *)characteristic forKey:characteristic.UUID];
+    }
   [self sendEventWithName:UNSUBSCRIBED body:@{
     @"centralUuid": central.identifier,
     @"characteristicUuid": characteristic.UUID.UUIDString,
